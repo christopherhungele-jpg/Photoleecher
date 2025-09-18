@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PhotoHunter - Auftragsjäger</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: linear-gradient(135deg, #f3e8ff, #dbeafe); min-height: 100vh; }
+        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
+        .header { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .title { color: #7c3aed; font-size: 2.5em; font-weight: bold; margin-bottom: 5px; }
+        .subtitle { color: #666; font-size: 0.9em; }
+        .scan-btn { background: linear-gradient(45deg, #7c3aed, #3b82f6); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: bold; margin: 10px 5px; }
+        .scan-btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(124,58,237,0.3); }
+        .scan-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .filters { background: white; border-radius: 15px; padding: 20px; margin-bottom: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        .filter-group { margin-bottom: 15px; }
+        .filter-label { font-weight: bold; margin-bottom: 8px; display: block; color: #374151; }
+        .filter-input, .filter-select { width: 100%; padding: 10px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 14px; }
+        .filter-input:focus, .filter-select:focus { border-color: #7c3aed; outline: none; }
+        .stats { display: flex; gap: 20px; margin-top: 15px; }
+        .stat { text-align: center; }
+        .stat-number { font-size: 1.5em; font-weight: bold; color: #7c3aed; }
+        .stat-label { font-size: 0.8em; color: #666; }
+        .progress { width: 100%; background: #f3f4f6; border-radius: 10px; height: 8px; margin: 10px 0; }
+        .progress-bar { height: 100%; background: linear-gradient(45deg, #7c3aed, #3b82f6); border-radius: 10px; transition: width 0.3s; }
+        .job-list { display: grid; gap: 20px; }
+        .job-card { background: white; border-radius: 15px; padding: 20px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border-left: 5px solid #7c3aed; }
+        .job-card.new { border-left-color: #10b981; background: linear-gradient(135deg, #f0fdf4, #ffffff); }
+        .job-card.contacted { border-left-color: #f59e0b; background: #fef3c7; }
+        .job-title { font-size: 1.3em; font-weight: bold; color: #1f2937; margin-bottom: 10px; }
+        .job-meta { display: flex; flex-wrap: wrap; gap: 15px; margin: 15px 0; font-size: 0.9em; color: #666; }
+        .job-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8em; font-weight: bold; }
+        .badge-new { background: #10b981; color: white; }
+        .badge-high { background: #ef4444; color: white; }
+        .badge-medium { background: #f59e0b; color: white; }
+        .badge-low { background: #10b981; color: white; }
+        .job-description { color: #4b5563; line-height: 1.5; margin-bottom: 15px; }
+        .job-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 15px; }
+        .action-btn { padding: 10px 16px; border-radius: 8px; text-decoration: none; font-weight: bold; text-align: center; font-size: 0.9em; }
+        .btn-email { background: #7c3aed; color: white; }
+        .btn-whatsapp { background: #10b981; color: white; }
+        .btn-phone { background: #3b82f6; color: white; }
+        .btn-original { background: #6b7280; color: white; }
+        .contact-info { background: #f9fafb; padding: 15px; border-radius: 8px; margin: 15px 0; font-size: 0.9em; }
+        .notes-input { width: 100%; padding: 8px; border: 1px solid #d1d5db; border-radius: 5px; margin-top: 10px; resize: vertical; }
+        .empty-state { text-align: center; padding: 60px 20px; }
+        .empty-icon { font-size: 4em; margin-bottom: 20px; }
+        @media (max-width: 768px) {
+            .container { padding: 10px; }
+            .header { padding: 15px; }
+            .title { font-size: 2em; }
+            .job-actions { flex-direction: column; }
+            .action-btn { text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <div>
+                    <div class="title">📸 PhotoHunter</div>
+                    <div class="subtitle">🏠 Läuft lokal • 🔒 100% privat • 💰 €0 Kosten</div>
+                </div>
+                <div>
+                    <button class="scan-btn" onclick="startScan()" id="scanBtn">🔍 Jobs finden</button>
+                    <button class="scan-btn" onclick="exportJobs()" style="background: #6b7280;">📁 Export</button>
+                </div>
+            </div>
+            <div id="progress" style="display: none;">
+                <div style="margin: 10px 0; color: #7c3aed; font-weight: bold;">Durchsuche Websites...</div>
+                <div class="progress">
+                    <div class="progress-bar" id="progressBar"></div>
+                </div>
+                <div id="progressText" style="font-size: 0.9em; color: #666;">Starte Suche...</div>
+            </div>
+        </div>
+
+```
+    <!-- Filter -->
+    <div class="filters">
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px;">
+            <div class="filter-group">
+                <label class="filter-label">🔍 Suchbegriff</label>
+                <input type="text" id="searchTerm" class="filter-input" placeholder="Hochzeit, Business...">
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">💰 Min. Budget (€)</label>
+                <input type="range" id="minBudget" min="0" max="2000" step="50" value="0" class="filter-input" oninput="updateBudgetDisplay()">
+                <div style="text-align: center; font-weight: bold; color: #7c3aed;" id="budgetDisplay">0€</div>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">📍 Max. Entfernung (km)</label>
+                <input type="range" id="maxDistance" min="5" max="100" value="50" class="filter-input" oninput="updateDistanceDisplay()">
+                <div style="text-align: center; font-weight: bold; color: #7c3aed;" id="distanceDisplay">50 km</div>
+            </div>
+            <div class="filter-group">
+                <label class="filter-label">🎯 Kategorie</label>
+                <select id="category" class="filter-select">
+                    <option value="all">Alle Kategorien</option>
+                    <option value="hochzeit">💒 Hochzeit</option>
+                    <option value="business">👔 Business</option>
+                    <option value="familie">👨‍👩‍👧‍👦 Familie</option>
+                    <option value="produkt">📦 Produkt</option>
+                    <option value="event">🎉 Event</option>
+                </select>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-number" id="newJobsCount">0</div>
+                <div class="stat-label">Neue Jobs</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="contactedCount">0</div>
+                <div class="stat-label">Kontaktiert</div>
+            </div>
+            <div class="stat">
+                <div class="stat-number" id="totalCount">0</div>
+                <div class="stat-label">Gesamt</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Job List -->
+    <div id="jobList" class="job-list">
+        <!-- Jobs werden hier dynamisch eingefügt -->
+    </div>
+</div>
+
+<script>
+    // Globale Variablen
+    let jobs = [];
+    let currentFilters = {
+        searchTerm: '',
+        minBudget: 0,
+        maxDistance: 50,
+        category: 'all'
+    };
+
+    // Initial laden
+    document.addEventListener('DOMContentLoaded', function() {
+        loadJobs();
+        setupEventListeners();
+        updateStats();
+    });
+
+    // Event Listeners
+    function setupEventListeners() {
+        document.getElementById('searchTerm').addEventListener('input', applyFilters);
+        document.getElementById('minBudget').addEventListener('input', applyFilters);
+        document.getElementById('maxDistance').addEventListener('input', applyFilters);
+        document.getElementById('category').addEventListener('change', applyFilters);
+    }
+
+    // Jobs laden
+    function loadJobs() {
+        const saved = localStorage.getItem('photohunter-jobs');
+        if (saved) {
+            jobs = JSON.parse(saved);
+        } else {
+            // Beispiel-Jobs
+            jobs = [
+                {
+                    id: 1,
+                    title: "Hochzeitsfotograf für Juni 2025 gesucht",
+                    description: "Wir heiraten am 14. Juni 2025 in München und suchen einen erfahrenen Hochzeitsfotografen. Standesamt + Feier, ca. 8 Stunden.",
+                    budget: 1000,
+                    budgetText: "800-1200€",
+                    location: "München Zentrum",
+                    distance: 12,
+                    category: "Hochzeit",
+                    urgency: "Mittel",
+                    source: "eBay Kleinanzeigen",
+                    contact: "anna.mueller@email.com",
+                    phone: "+49 89 12345678",
+                    postedTime: Date.now() - 2 * 60 * 60 * 1000,
+                    isNew: true,
+                    contacted: false,
+                    notes: ""
+                },
+                {
+                    id: 2,
+                    title: "Business-Portraits für LinkedIn",
+                    description: "Unternehmensberaterin braucht professionelle Businessfotos für LinkedIn-Profil und Website. Zeitnah möglich.",
+                    budget: 325,
+                    budgetText: "250-400€",
+                    location: "München Schwabing",
+                    distance: 8,
+                    category: "Business",
+                    urgency: "Hoch",
+                    source: "Xing",
+                    contact: "sarah.business@consulting.de",
+                    phone: "+49 89 87654321",
+                    postedTime: Date.now() - 45 * 60 * 1000,
+                    isNew: true,
+                    contacted: false,
+                    notes: ""
+                },
+                {
+                    id: 3,
+                    title: "Familienshooting im Englischen Garten",
+                    description: "Familie mit 2 Kindern (5 und 8 Jahre) möchte professionelle Familienfotos. Entspannte Outdoor-Atmosphäre gewünscht.",
+                    budget: 375,
+                    budgetText: "300-450€",
+                    location: "München Maxvorstadt",
+                    distance: 15,
+                    category: "Familie",
+                    urgency: "Niedrig",
+                    source: "Facebook Gruppe",
+                    contact: "familie.schmidt@gmail.com",
+                    phone: "+49 89 11223344",
+                    postedTime: Date.now() - 24 * 60 * 60 * 1000,
+                    isNew: false,
+                    contacted: false,
+                    notes: ""
+                }
+            ];
+            saveJobs();
+        }
+        displayJobs();
+    }
+
+    // Jobs speichern
+    function saveJobs() {
+        localStorage.setItem('photohunter-jobs', JSON.stringify(jobs));
+    }
+
+    // Filter anwenden
+    function applyFilters() {
+        currentFilters.searchTerm = document.getElementById('searchTerm').value.toLowerCase();
+        currentFilters.minBudget = parseInt(document.getElementById('minBudget').value);
+        currentFilters.maxDistance = parseInt(document.getElementById('maxDistance').value);
+        currentFilters.category = document.getElementById('category').value;
+        
+        updateBudgetDisplay();
+        updateDistanceDisplay();
+        displayJobs();
+    }
+
+    // Budget/Distance Display aktualisieren
+    function updateBudgetDisplay() {
+        document.getElementById('budgetDisplay').textContent = document.getElementById('minBudget').value + '€';
+    }
+
+    function updateDistanceDisplay() {
+        document.getElementById('distanceDisplay').textContent = document.getElementById('maxDistance').value + ' km';
+    }
+
+    // Jobs anzeigen
+    function displayJobs() {
+        const filtered = jobs.filter(job => {
+            const searchMatch = !currentFilters.searchTerm || 
+                job.title.toLowerCase().includes(currentFilters.searchTerm) ||
+                job.description.toLowerCase().includes(currentFilters.searchTerm);
+            const budgetMatch = job.budget >= currentFilters.minBudget;
+            const distanceMatch = job.distance <= currentFilters.maxDistance;
+            const categoryMatch = currentFilters.category === 'all' || 
+                job.category.toLowerCase().includes(currentFilters.category);
+            
+            return searchMatch && budgetMatch && distanceMatch && categoryMatch;
+        });
+
+        // Sortieren: Neue Jobs zuerst
+        filtered.sort((a, b) => {
+            if (a.isNew && !b.isNew) return -1;
+            if (!a.isNew && b.isNew) return 1;
+            return b.postedTime - a.postedTime;
+        });
+
+        const jobList = document.getElementById('jobList');
+        
+        if (filtered.length === 0) {
+            jobList.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">🔍</div>
+                    <h3>Keine Jobs gefunden</h3>
+                    <p>Passe deine Filter an oder starte eine neue Suche.</p>
+                    <button class="scan-btn" onclick="startScan()">🔍 Neue Suche starten</button>
+                </div>
+            `;
+        } else {
+            jobList.innerHTML = filtered.map(job => `
+                <div class="job-card ${job.isNew ? 'new' : ''} ${job.contacted ? 'contacted' : ''}">
+                    <div class="job-title">
+                        ${getCategoryIcon(job.category)} ${job.title}
+                        ${job.isNew ? '<span class="job-badge badge-new">✨ NEU</span>' : ''}
+                        ${job.contacted ? '<span class="job-badge" style="background:#f59e0b;color:white">✅ Kontaktiert</span>' : ''}
+                        <span class="job-badge badge-${job.urgency.toLowerCase()}">${getUrgencyIcon(job.urgency)} ${job.urgency}</span>
+                    </div>
+                    
+                    <div class="job-description">${job.description}</div>
+                    
+                    <div class="job-meta">
+                        <div><strong>💰 ${job.budgetText}</strong></div>
+                        <div>📍 ${job.location} (${job.distance} km)</div>
+                        <div>🕒 ${formatTimeAgo(job.postedTime)}</div>
+                        <div>📊 ${job.source}</div>
+                    </div>
+
+                    <div class="contact-info">
+                        <div>📧 ${job.contact}</div>
+                        <div>📞 ${job.phone}</div>
+                    </div>
+
+                    <textarea class="notes-input" placeholder="📝 Notizen..." 
+                              onchange="updateNotes(${job.id}, this.value)">${job.notes}</textarea>
+
+                    <div class="job-actions">
+                        <a href="mailto:${job.contact}?subject=Fotografin für '${job.title}'&body=Hallo,%0D%0A%0D%0AIch bin professionelle Fotografin und interessiere mich für Ihren Auftrag '${job.title}'.%0D%0A%0D%0AKönnen wir gerne telefonieren?%0D%0A%0D%0AHerzliche Grüße" 
+                           class="action-btn btn-email" onclick="markContacted(${job.id})">📧 Email</a>
+                        <a href="https://wa.me/${job.phone.replace(/[^0-9]/g, '')}?text=Hallo, ich bin Fotografin und interessiere mich für Ihren Auftrag '${job.title}'. Können wir darüber sprechen?" 
+                           target="_blank" class="action-btn btn-whatsapp">💬 WhatsApp</a>
+                        <a href="tel:${job.phone}" class="action-btn btn-phone">📞 Anrufen</a>
+                        <a href="#" class="action-btn btn-original">🔗 Original</a>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        updateStats();
+    }
+
+    // Hilfsfunktionen
+    function getCategoryIcon(category) {
+        const icons = {
+            'Hochzeit': '💒',
+            'Business': '👔', 
+            'Familie': '👨‍👩‍👧‍👦',
+            'Produkt': '📦',
+            'Event': '🎉'
+        };
+        return icons[category] || '📸';
+    }
+
+    function getUrgencyIcon(urgency) {
+        const icons = {
+            'Hoch': '🔥',
+            'Mittel': '⚡',
+            'Niedrig': '📅'
+        };
+        return icons[urgency] || '📋';
+    }
+
+    function formatTimeAgo(timestamp) {
+        const diff = Date.now() - timestamp;
+        const minutes = Math.floor(diff / 60000);
+        const hours = Math.floor(minutes / 60);
+        const days = Math.floor(hours / 24);
+        
+        if (minutes < 1) return 'gerade eben';
+        if (minutes < 60) return `vor ${minutes} Min`;
+        if (hours < 24) return `vor ${hours} Std`;
+        return `vor ${days} Tag${days > 1 ? 'en' : ''}`;
+    }
+
+    // Statistiken aktualisieren
+    function updateStats() {
+        document.getElementById('newJobsCount').textContent = jobs.filter(j => j.isNew).length;
+        document.getElementById('contactedCount').textContent = jobs.filter(j => j.contacted).length;
+        document.getElementById('totalCount').textContent = jobs.length;
+    }
+
+    // Job-Aktionen
+    function markContacted(jobId) {
+        jobs = jobs.map(job => 
+            job.id === jobId ? {...job, contacted: true, isNew: false} : job
+        );
+        saveJobs();
+        displayJobs();
+    }
+
+    function updateNotes(jobId, notes) {
+        jobs = jobs.map(job => 
+            job.id === jobId ? {...job, notes: notes} : job
+        );
+        saveJobs();
+    }
+
+    // Scan-Funktion (simuliert)
+    async function startScan() {
+        const scanBtn = document.getElementById('scanBtn');
+        const progress = document.getElementById('progress');
+        const progressBar = document.getElementById('progressBar');
+        const progressText = document.getElementById('progressText');
+        
+        scanBtn.disabled = true;
+        scanBtn.textContent = '⏳ Suche läuft...';
+        progress.style.display = 'block';
+        
+        const sites = [
+            'eBay Kleinanzeigen München',
+            'Facebook Hochzeitsgruppen', 
+            'Nebenan.de München',
+            'Xing Business Netzwerk',
+            'LinkedIn München',
+            'Markt.de Bayern'
+        ];
+        
+        for (let i = 0; i < sites.length; i++) {
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const percentage = ((i + 1) / sites.length) * 100;
+            progressBar.style.width = percentage + '%';
+            progressText.textContent = `Durchsuche: ${sites[i]}`;
+        }
+
+        // Neue Jobs hinzufügen (80% Chance)
+        if (Math.random() > 0.2) {
+            const newJobs = [
+                {
+                    id: Date.now(),
+                    title: "Produktfotos für Online-Shop",
+                    description: "Startup sucht Fotografen für ca. 50 Schmuck-Artikel. Weißer Hintergrund, professionelles Setup.",
+                    budget: 650,
+                    budgetText: "500-800€",
+                    location: "München Sendling",
+                    distance: Math.floor(Math.random() * 20) + 10,
+                    category: "Produkt",
+                    urgency: "Mittel",
+                    source: "LinkedIn",
+                    contact: "info@jewelry-startup.de",
+                    phone: "+49 89 99887766",
+                    postedTime: Date.now(),
+                    isNew: true,
+                    contacted: false,
+                    notes: ""
+                }
+            ];
+            
+            jobs = [...newJobs, ...jobs];
+            saveJobs();
+            
+            // Browser-Benachrichtigung
+            if (Notification.permission === 'granted') {
+                new Notification('PhotoHunter: 1 neuer Job gefunden!', {
+                    body: newJobs[0].title,
+                    icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">📸</text></svg>'
+                });
+            } else if (Notification.permission === 'default') {
+                Notification.requestPermission();
+            }
+        }
+        
+        progress.style.display = 'none';
+        scanBtn.disabled = false;
+        scanBtn.textContent = '🔍 Jobs finden';
+        displayJobs();
+    }
+
+    // Export-Funktion
+    function exportJobs() {
+        const dataStr = JSON.stringify(jobs, null, 2);
+        const dataBlob = new Blob([dataStr], {type: 'application/json'});
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `photohunter-jobs-${new Date().toISOString().split('T')[0]}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+    }
+</script>
+```
+
+</body>
+</html>
